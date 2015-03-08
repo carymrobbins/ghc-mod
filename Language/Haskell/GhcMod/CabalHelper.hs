@@ -35,6 +35,7 @@ import Language.Haskell.GhcMod.World
 import Language.Haskell.GhcMod.PathsAndFiles
 import System.FilePath
 import System.Process
+import System.IO (hPutStrLn, stderr)
 
 -- | Only package related GHC options, sufficient for things that don't need to
 -- access home modules
