@@ -16,6 +16,7 @@ import System.IO
 import System.FilePath
 import System.Directory
 
+import Control.Monad.Fail
 import Control.Monad.Trans.Maybe
 import GHC
 import Control.Monad
@@ -99,7 +100,7 @@ unloadMappedFile' cfn = void $ runMaybeT $ do
   liftIO $ when (fmTemp fm) $ removeFile (fmPath fm)
   delMMappedFile cfn
 
-fileModSummaryWithMapping :: (IOish m, GmState m, GhcMonad m, GmEnv m) =>
+fileModSummaryWithMapping :: (IOish m, GmState m, GhcMonad m, GmEnv m, MonadFail m) =>
                             FilePath -> m ModSummary
 fileModSummaryWithMapping fn =
   withMappedFile fn $ \fn' -> fileModSummary fn'

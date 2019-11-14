@@ -7,6 +7,7 @@ import GhcMod.Monad.Types
 import GhcMod.Utils
 
 import Control.Applicative
+import Control.Monad.Fail
 import Data.Maybe
 import Data.Traversable hiding (mapM)
 import System.FilePath ((</>))
@@ -22,13 +23,13 @@ data World = World {
   , worldMappedFiles   :: FileMappingMap
   } deriving (Eq)
 
-timedPackageCaches :: IOish m => GhcModT m [TimedFile]
+timedPackageCaches :: (IOish m, MonadFail m) => GhcModT m [TimedFile]
 timedPackageCaches = do
     fs <- mapM (liftIO . mightExist) . map (</> packageCache)
             =<< getPackageCachePaths libdir
     (liftIO . timeFile) `mapM` catMaybes fs
 
-getCurrentWorld :: IOish m => GhcModT m World
+getCurrentWorld :: (IOish m, MonadFail m) => GhcModT m World
 getCurrentWorld = do
     crdl <- cradle
     pkgCaches    <- timedPackageCaches
@@ -45,7 +46,7 @@ getCurrentWorld = do
       , worldMappedFiles   = mFileMap
       }
 
-didWorldChange :: IOish m => World -> GhcModT m Bool
+didWorldChange :: (IOish m, MonadFail m) => World -> GhcModT m Bool
 didWorldChange world = do
     (world /=) <$> getCurrentWorld
 

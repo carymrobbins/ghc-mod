@@ -16,6 +16,7 @@ import Control.Exception (Exception)
 import Control.Applicative
 import Control.Concurrent
 import Control.Monad
+import Control.Monad.Fail
 import Control.DeepSeq
 import Data.Binary
 import Data.Binary.Generic
@@ -48,7 +49,7 @@ import GhcMod.Caching.Types
 -- Basicially an @IOish m => m@ is a 'Monad' supporting arbitrary 'IO' and
 -- exception handling. Usually this will simply be 'IO' but we parametrise it in
 -- the exported API so users have the option to use a custom inner monad.
-type IOish m = (Functor m, MonadIO m, MonadBaseControl IO m, ExceptionMonad m)
+type IOish m = (Functor m, MonadIO m, MonadBaseControl IO m, ExceptionMonad m, MonadFail m)
 
 
 -- MonadUtils of GHC 7.6 or earlier defines its own MonadIO.

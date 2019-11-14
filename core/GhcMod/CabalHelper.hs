@@ -26,6 +26,7 @@ module GhcMod.CabalHelper
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Fail
 import Control.Category ((.))
 import Data.Maybe
 import Data.Monoid
@@ -52,7 +53,7 @@ import Paths_ghc_mod_core as GhcMod
 
 -- | Only package related GHC options, sufficient for things that don't need to
 -- access home modules
-getGhcMergedPkgOptions :: (Applicative m, IOish m, Gm m)
+getGhcMergedPkgOptions :: (Applicative m, IOish m, Gm m, MonadFail m)
   => m [GHCOption]
 getGhcMergedPkgOptions = chCached $ \distdir -> Cached {
   cacheLens = Just (lGmcMergedPkgOptions . lGmCaches),
@@ -62,7 +63,7 @@ getGhcMergedPkgOptions = chCached $ \distdir -> Cached {
     return ([setupConfigPath distdir], opts)
  }
 
-getCabalPackageDbStack :: (IOish m, Gm m) => m [GhcPkgDb]
+getCabalPackageDbStack :: (IOish m, Gm m, MonadFail m) => m [GhcPkgDb]
 getCabalPackageDbStack = chCached $ \distdir -> Cached {
   cacheLens = Just (lGmcPackageDbStack . lGmCaches),
   cacheFile = pkgDbStackCacheFile distdir,
@@ -83,7 +84,7 @@ chPkgToGhcPkg (ChPkgSpecific f) = PackageDb f
 --
 -- The Component\'s 'gmcHomeModuleGraph' will be empty and has to be resolved by
 -- 'resolveGmComponents'.
-getComponents :: (Applicative m, IOish m, Gm m)
+getComponents :: (Applicative m, IOish m, Gm m, MonadFail m)
               => m [GmComponent 'GMCRaw ChEntrypoint]
 getComponents = chCached $ \distdir -> Cached {
     cacheLens = Just (lGmcComponents . lGmCaches),
@@ -101,7 +102,7 @@ getComponents = chCached $ \distdir -> Cached {
       return ([setupConfigPath distdir], cs)
   }
 
-getQueryEnv :: (IOish m, GmOut m, GmEnv m) => m QueryEnv
+getQueryEnv :: (IOish m, GmOut m, GmEnv m, MonadFail m) => m QueryEnv
 getQueryEnv = do
   crdl <- cradle
   progs <- patchStackPrograms crdl =<< (optPrograms <$> options)
@@ -113,19 +114,19 @@ getQueryEnv = do
                 , qePrograms = helperProgs progs
                 }
 
-runCHQuery :: (IOish m, GmOut m, GmEnv m) => Query m b -> m b
+runCHQuery :: (IOish m, GmOut m, GmEnv m, MonadFail m) => Query m b -> m b
 runCHQuery a = do
   qe <- getQueryEnv
   runQuery qe a
 
 
-prepareCabalHelper :: (IOish m, GmEnv m, GmOut m, GmLog m) => m ()
+prepareCabalHelper :: (IOish m, GmEnv m, GmOut m, GmLog m, MonadFail m) => m ()
 prepareCabalHelper = do
   crdl <- cradle
   when (isCabalHelperProject $ cradleProject crdl) $
        withCabal $ prepare =<< getQueryEnv
 
-withAutogen :: (IOish m, GmEnv m, GmOut m, GmLog m) => m a -> m a
+withAutogen :: (IOish m, GmEnv m, GmOut m, GmLog m, MonadFail m) => m a -> m a
 withAutogen action = do
     gmLog GmDebug "" $ strDoc $ "making sure autogen files exist"
     crdl <- cradle
@@ -150,7 +151,7 @@ withAutogen action = do
      writeAutogenFiles =<< getQueryEnv
 
 
-withCabal :: (IOish m, GmEnv m, GmOut m, GmLog m) => m a -> m a
+withCabal :: (IOish m, GmEnv m, GmOut m, GmLog m, MonadFail m) => m a -> m a
 withCabal action = do
     crdl <- cradle
     mCabalFile          <- liftIO $ timeFile `traverse` cradleCabalFile crdl
@@ -275,7 +276,7 @@ helperProgs progs = CH.Programs {
     ghcPkgProgram = T.ghcPkgProgram progs
   }
 
-chCached :: (Applicative m, IOish m, Gm m, Binary a)
+chCached :: (Applicative m, IOish m, Gm m, Binary a, MonadFail m)
   => (FilePath -> Cached m GhcModState ChCacheData a) -> m a
 chCached c = do
   projdir <- cradleRootDir <$> cradle

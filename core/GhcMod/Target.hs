@@ -20,6 +20,7 @@ module GhcMod.Target where
 import Control.Arrow
 import Control.Applicative
 import Control.Category ((.))
+import Control.Monad.Fail
 import GHC
 import qualified Hooks    as GHC
 import qualified HscTypes as GHC
@@ -613,7 +614,7 @@ needsHscInterpreted = any $ \ms ->
 #endif
 #endif
 
-cabalResolvedComponents :: (IOish m) =>
+cabalResolvedComponents :: IOish m =>
    GhcModT m (Map ChComponentName (GmComponent 'GMCResolved (Set ModulePath)))
 cabalResolvedComponents = do
     crdl@(Cradle{..}) <- cradle

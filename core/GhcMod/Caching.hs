@@ -21,6 +21,7 @@ module GhcMod.Caching (
 
 import Control.Arrow (first)
 import Control.Monad
+import Control.Monad.Fail
 import Control.Monad.Trans.Maybe
 #if !MIN_VERSION_binary(0,7,0)
 import Control.Exception
@@ -43,7 +44,7 @@ import GhcMod.Caching.Types
 import GhcMod.Logging
 
 -- | Cache a MonadIO action with proper invalidation.
-cached :: forall m a d. (Gm m, MonadIO m, Binary a, Eq d, Binary d, Show d)
+cached :: forall m a d. (Gm m, MonadIO m, MonadFail m, Binary a, Eq d, Binary d, Show d)
        => FilePath -- ^ Directory to prepend to 'cacheFile'
        -> Cached m GhcModState d a -- ^ Cache descriptor
        -> d

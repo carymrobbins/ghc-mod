@@ -11,6 +11,7 @@ module GhcMod.GhcPkg (
 
 import Config (cProjectVersion, cTargetPlatformString, cProjectVersionInt)
 import Control.Applicative
+import Control.Monad.Fail
 import Data.List.Split (splitOn)
 import Data.Maybe
 import Exception (handleIO)
@@ -62,7 +63,7 @@ ghcDbOpt (PackageDb pkgDb)
 
 ----------------------------------------------------------------
 
-getGhcPkgProgram :: IOish m => GhcModT m FilePath
+getGhcPkgProgram :: (IOish m, MonadFail m) => GhcModT m FilePath
 getGhcPkgProgram = do
   crdl <- cradle
   progs <- optPrograms <$> options
@@ -73,7 +74,7 @@ getGhcPkgProgram = do
     _ ->
         return $ ghcPkgProgram progs
 
-getPackageDbStack :: IOish m => GhcModT m [GhcPkgDb]
+getPackageDbStack :: (IOish m, MonadFail m) => GhcModT m [GhcPkgDb]
 getPackageDbStack = do
   crdl <- cradle
   mCusPkgStack <- getCustomPkgDbStack
@@ -89,7 +90,7 @@ getPackageDbStack = do
         return $ [GlobalDb, PackageDb seSnapshotPkgDb, PackageDb seLocalPkgDb]
   return $ fromMaybe stack mCusPkgStack
 
-getPackageCachePaths :: IOish m => FilePath -> GhcModT m [FilePath]
+getPackageCachePaths :: (IOish m, MonadFail m) => FilePath -> GhcModT m [FilePath]
 getPackageCachePaths sysPkgCfg = do
   pkgDbStack <- getPackageDbStack
   catMaybes <$> (liftIO . resolvePackageConfig sysPkgCfg) `mapM` pkgDbStack

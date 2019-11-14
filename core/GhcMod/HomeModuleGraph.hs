@@ -44,6 +44,7 @@ import Pretty
 import Control.Arrow ((&&&))
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Fail
 import Control.Monad.Trans.Maybe (MaybeT(..), runMaybeT)
 import Control.Monad.State.Strict (execStateT)
 import Control.Monad.State.Class
@@ -127,7 +128,7 @@ pruneUnreachable smp0 gmg@GmModuleGraph {..} = let
 collapseMaybeSet :: Maybe (Set a) -> Set a
 collapseMaybeSet = maybe Set.empty id
 
-homeModuleGraph :: (IOish m, Gm m)
+homeModuleGraph :: (IOish m, Gm m, MonadFail m)
     => HscEnv -> Set ModulePath -> m GmModuleGraph
 homeModuleGraph env smp = updateHomeModuleGraph env mempty smp smp
 
@@ -162,7 +163,7 @@ canonicalizeModuleGraph GmModuleGraph {..} = liftIO $ do
    fmg (mp, smp) = liftM2 (,) (canonicalizeModulePath mp) (Set.fromList <$> mapM canonicalizeModulePath (Set.toList smp))
 
 
-updateHomeModuleGraph :: (IOish m, Gm m)
+updateHomeModuleGraph :: (IOish m, Gm m, MonadFail m)
                       => HscEnv
                       -> GmModuleGraph
                       -> Set ModulePath -- ^ Initial set of modules
@@ -188,7 +189,7 @@ mkModuleMap :: Set ModulePath -> Map ModuleName ModulePath
 mkModuleMap smp = Map.fromList $ map (mpModule &&& id) $ Set.toList smp
 
 updateHomeModuleGraph'
-    :: forall m. (MonadState S m, IOish m, Gm m)
+    :: forall m. (MonadState S m, IOish m, Gm m, MonadFail m)
     => HscEnv
     -> Set ModulePath     -- ^ Initial set of modules
     -> m ()

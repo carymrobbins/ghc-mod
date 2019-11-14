@@ -62,6 +62,7 @@ module GhcMod.Gap (
 
 import Control.Applicative hiding (empty)
 import Control.Monad (filterM)
+import Control.Monad.Fail (MonadFail)
 import CoreSyn (CoreExpr)
 import Data.List (intersperse)
 import Data.Maybe (catMaybes)
@@ -301,7 +302,7 @@ ghcCmdOptions = [ "-f" ++ prefix ++ option
 ----------------------------------------------------------------
 ----------------------------------------------------------------
 
-fileModSummary :: GhcMonad m => FilePath -> m ModSummary
+fileModSummary :: (GhcMonad m, MonadFail m) => FilePath -> m ModSummary
 fileModSummary file' = do
     mss <- getModuleGraph
     file <- liftIO $ canonicalizePath file'

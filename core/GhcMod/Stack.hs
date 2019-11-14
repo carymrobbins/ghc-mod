@@ -20,6 +20,7 @@ import Safe
 import Control.Applicative
 import Control.Exception as E
 import Control.Monad
+import Control.Monad.Fail
 import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.Class
 import Data.List
@@ -38,7 +39,7 @@ import GhcMod.Error
 import qualified GhcMod.Utils as U
 import Prelude
 
-patchStackPrograms :: (IOish m, GmOut m) => Cradle -> Programs -> m Programs
+patchStackPrograms :: (IOish m, GmOut m, MonadFail m) => Cradle -> Programs -> m Programs
 patchStackPrograms Cradle { cradleProject = (StackProject senv) } progs = do
   Just ghc <- getStackGhcPath senv
   Just ghcPkg <- getStackGhcPkgPath senv

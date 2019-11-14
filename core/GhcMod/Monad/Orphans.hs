@@ -30,6 +30,8 @@ import qualified MonadUtils as GHC (MonadIO(..))
 #endif
 import qualified Control.Monad.IO.Class as MTL
 
+import Control.Monad.Fail (MonadFail)
+import qualified Control.Monad.Fail as Fail
 import Control.Monad.Reader (ReaderT(..))
 import Control.Monad.State.Strict (StateT(..))
 import Control.Monad.Trans.Journal (JournalT)
@@ -81,3 +83,7 @@ instance MonadIOC m => MonadIO (GmlT m) where
     liftIO = MTL.liftIO
 instance MonadIO LightGhc where
     liftIO = MTL.liftIO
+
+-- Hack, but should work.
+instance (MonadFail m, MonadIO m) => MonadFail (JournalT x m) where
+    fail = MTL.liftIO . fail

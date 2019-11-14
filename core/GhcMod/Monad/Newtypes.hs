@@ -28,6 +28,7 @@ import GHC
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Fail
 
 import Control.Monad.Reader (ReaderT(..))
 import Control.Monad.Error (ErrorT(..), MonadError(..))
@@ -51,6 +52,7 @@ newtype GmOutT m a = GmOutT {
                , Applicative
                , Alternative
                , Monad
+               , MonadFail
                , MonadPlus
                , MonadTrans
                )
@@ -64,6 +66,7 @@ newtype GmT m a = GmT {
                , Applicative
                , Alternative
                , Monad
+               , MonadFail
                , MonadPlus
                , MonadError GhcModError
                )
@@ -73,6 +76,7 @@ newtype GmlT m a = GmlT { unGmlT :: GhcModT m a }
              , Applicative
              , Alternative
              , Monad
+             , MonadFail
              , MonadPlus
              , MonadError GhcModError
              )
@@ -81,6 +85,7 @@ newtype LightGhc a = LightGhc { unLightGhc :: ReaderT (IORef HscEnv) IO a }
     deriving ( Functor
              , Applicative
              , Monad
+             , MonadFail
              )
 
 -- GmOutT ----------------------------------------

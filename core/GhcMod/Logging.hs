@@ -26,6 +26,7 @@ module GhcMod.Logging (
 
 import Control.Applicative hiding (empty)
 import Control.Monad
+import Control.Monad.Fail
 import Control.Monad.Trans.Class
 import Data.List
 import Data.Char
@@ -46,7 +47,7 @@ gmSetLogLevel :: GmLog m => GmLogLevel -> m ()
 gmSetLogLevel level =
     gmlJournal $ GhcModLog (Just level) (Last Nothing) []
 
-gmGetLogLevel :: forall m. GmLog m => m GmLogLevel
+gmGetLogLevel :: forall m. (GmLog m, MonadFail m) => m GmLogLevel
 gmGetLogLevel = do
   GhcModLog { gmLogLevel = Just level } <-  gmlHistory
   return level
@@ -71,7 +72,7 @@ decreaseLogLevel l = pred l
 -- True
 -- >>> Just GmDebug <= Just GmException
 -- False
-gmLog :: (MonadIO m, GmLog m, GmOut m) => GmLogLevel -> String -> Doc -> m ()
+gmLog :: (MonadIO m, MonadFail m, GmLog m, GmOut m) => GmLogLevel -> String -> Doc -> m ()
 gmLog level loc' doc = do
   GhcModLog { gmLogLevel = Just level' } <- gmlHistory
 
@@ -91,7 +92,7 @@ gmAppendLogQuiet :: GmLog m => GhcModLog -> m ()
 gmAppendLogQuiet GhcModLog { gmLogMessages } =
     forM_ gmLogMessages $ \(level, loc, doc) -> gmLogQuiet level loc doc
 
-gmVomit :: (MonadIO m, GmLog m, GmOut m, GmEnv m) => String -> Doc -> String -> m ()
+gmVomit :: (MonadIO m, MonadFail m, GmLog m, GmOut m, GmEnv m) => String -> Doc -> String -> m ()
 gmVomit filename doc content = do
   gmLog GmVomit "" $ doc <+>: text content
 

@@ -7,6 +7,7 @@ module GhcMod.Exe.FillSig (
   -- , auto
   ) where
 
+import Control.Monad.Fail (MonadFail)
 import Data.Char (isSymbol)
 import Data.Function (on)
 import Data.Functor
@@ -109,7 +110,7 @@ sig file lineNo colNo =
 -- a. Code for getting the information
 
 -- Get signature from ghc parsing and typechecking
-getSignature :: GhcMonad m => G.ModSummary -> Int -> Int -> m (Maybe SigInfo)
+getSignature :: (GhcMonad m, MonadFail m) => G.ModSummary -> Int -> Int -> m (Maybe SigInfo)
 getSignature modSum lineNo colNo = do
     p@ParsedModule{pm_parsed_source = ps} <- G.parseModule modSum
     -- Inspect the parse tree to find the signature
